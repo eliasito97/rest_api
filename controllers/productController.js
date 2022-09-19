@@ -1,9 +1,9 @@
-const fs = require("fs");
+//const fs = require("fs");
+const Product = require("../models/Product");
+const catchAsync = require("../utils/catchAsync");
 
-exports.getAllProducts = (req, res) => {
-  const products = JSON.parse(
-    fs.readFileSync(`${__dirname}/../data/products.json`)
-  );
+exports.getAllProducts = catchAsync(async (req, res) => {
+  const products = await Product.find();
 
   res.status(200).json({
     status: "success",
@@ -13,29 +13,20 @@ exports.getAllProducts = (req, res) => {
       products,
     },
   });
-};
+});
 
-exports.addProduct = (req, res) => {
-  const products = JSON.parse(
-    fs.readFileSync(`${__dirname}/../data/products.json`)
-  );
-  products.push(req.body);
-  fs.writeFileSync(`${__dirname}/data/products.json`, JSON.stringify(products));
-
+exports.addProduct = catchAsync(async (req, res) => {
+  const newProduct = await Product.create(req.body);
   res.status(200).json({
     status: "success",
     data: {
-      products,
+      product: newProduct,
     },
   });
-};
+});
 
-exports.getProductById = (req, res) => {
-  const products = JSON.parse(
-    fs.readFileSync(`${__dirname}/../data/products.json`)
-  );
-
-  const foundProduct = products.find((p) => p.id == req.params.id);
+exports.getProductById = catchAsync(async (req, res) => {
+  const foundProduct = await Product.findById(req.params.id);
   if (foundProduct) {
     res.status(200).json({
       status: "success",
@@ -48,4 +39,36 @@ exports.getProductById = (req, res) => {
       status: "not found",
     });
   }
-};
+});
+
+exports.updateProduct = catchAsync(async (req, res) => {
+  const {id}=req.params;
+  const {_id, ...resto}=req.body
+  const foundProduct= await Product.findByIdAndUpdate(id,resto);
+  if(foundProduct){
+    res.status(200).json({
+      status:"succes",
+      
+    });
+  }else{
+    res.status(404).json({
+      status:"not found"
+    });
+  }
+});
+
+exports.deleteProduct = catchAsync(async (req, res) => {
+  const {id}=req.params;
+  //const {_id, ...resto}=req.body
+  const foundProduct= await Product.findByIdAndDelete(id);
+  if(foundProduct){
+    res.status(200).json({
+      status:"succes",
+      
+    });
+  }else{
+    res.status(404).json({
+      status:"not found"
+    });
+  }
+});
